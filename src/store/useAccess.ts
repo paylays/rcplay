@@ -7,6 +7,7 @@ interface AccessState {
   level: AccessLevel;
   hasSeenGate: boolean;
   donorName?: string;
+  deviceId: string;
   setFullAccess: (name?: string) => void;
   setFreeAccess: () => void;
   markGateSeen: () => void;
@@ -19,6 +20,7 @@ export const useAccessStore = create<AccessState>()(
       level: 'free',
       hasSeenGate: false,
       donorName: '',
+      deviceId: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36),
       setFullAccess: (name) =>
         set({
           level: 'full',
@@ -35,11 +37,13 @@ export const useAccessStore = create<AccessState>()(
           hasSeenGate: true,
         }),
       resetAccess: () =>
-        set({
+        set((state) => ({
           level: 'free',
           hasSeenGate: false,
           donorName: '',
-        }),
+          // Keep deviceId when resetting access so they keep the same ID
+          deviceId: state.deviceId,
+        })),
     }),
     {
       name: 'toefl_access_store',

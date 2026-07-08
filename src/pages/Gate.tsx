@@ -5,7 +5,7 @@ import { sha256, VALID_CODE_HASHES } from '../utils/crypto';
 
 export default function Gate() {
   const navigate = useNavigate();
-  const { setFullAccess, setFreeAccess } = useAccessStore();
+  const { setFullAccess, setFreeAccess, deviceId } = useAccessStore();
   const [showVoucherInput, setShowVoucherInput] = useState(false);
   const [voucherCode, setVoucherCode] = useState('');
   const [userName, setUserName] = useState('');
@@ -31,16 +31,38 @@ export default function Gate() {
     setIsVerifying(true);
     try {
       const inputHash = await sha256(inputCode);
-      const isValid = VALID_CODE_HASHES.includes(inputHash);
+      const appsScriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL;
 
-      if (isValid) {
-        setFullAccess(userName.trim() || 'Teman Baik');
-        navigate('/');
+      if (appsScriptUrl) {
+        // Verification using Google Sheets API
+        const response = await fetch(appsScriptUrl, {
+          method: 'POST',
+          body: JSON.stringify({
+            codeHash: inputHash,
+            deviceId: deviceId
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          setFullAccess(userName.trim() || 'Teman Baik');
+          navigate('/');
+        } else {
+          setErrorMessage(result.message || 'Kode voucher tidak valid atau sudah melebihi batas perangkat.');
+        }
       } else {
-        setErrorMessage('Kode voucher tidak valid. Silakan periksa kembali pesan terima kasih di Trakteer.');
+        // Fallback to local validation if API URL is not configured
+        const isValid = VALID_CODE_HASHES.includes(inputHash);
+        if (isValid) {
+          setFullAccess(userName.trim() || 'Teman Baik');
+          navigate('/');
+        } else {
+          setErrorMessage('Kode voucher tidak valid. Silakan periksa kembali pesan terima kasih di Trakteer.');
+        }
       }
     } catch (err) {
-      setErrorMessage('Terjadi kesalahan sistem saat verifikasi. Silakan coba lagi.');
+      setErrorMessage('Terjadi kesalahan koneksi saat verifikasi. Silakan coba lagi.');
     } finally {
       setIsVerifying(false);
     }
