@@ -1,11 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Home from './pages/Home';
-import Quiz from './pages/Quiz';
-import Results from './pages/Results';
-import Dashboard from './pages/Dashboard';
-import Gate from './pages/Gate';
-import { useAccessStore } from './store/useAccess';
-import './index.css';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Home from "./pages/Home";
+import Quiz from "./pages/Quiz";
+import Results from "./pages/Results";
+import Dashboard from "./pages/Dashboard";
+import Gate from "./pages/Gate";
+import { useAccessStore } from "./store/useAccess";
+import "./index.css";
 
 function MainRoute() {
   const { hasSeenGate } = useAccessStore();
