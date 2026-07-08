@@ -86,11 +86,11 @@ function cleanOptionText(str) {
 function parseOptions(rawLines) {
   let text = rawLines.join(' ').replace(/\s+/g, ' ').trim();
   
-  // Normalize common label typos
-  text = text.replace(/\bB\)\s+/g, '(B) ');
-  text = text.replace(/\bC\)\s+/g, '(C) ');
-  text = text.replace(/\bD\)\s+/g, '(D) ');
-  text = text.replace(/\bA\)\s+/g, '(A) ');
+  // Normalize common label typos (using lookbehind to avoid matching existing parentheses)
+  text = text.replace(/(?<!\()B\)\s+/g, '(B) ');
+  text = text.replace(/(?<!\()C\)\s+/g, '(C) ');
+  text = text.replace(/(?<!\()D\)\s+/g, '(D) ');
+  text = text.replace(/(?<!\()A\)\s+/g, '(A) ');
   
   // Fix the PT39 Q3 typo where C is labeled (A)
   text = text.replace(/(\(B\).*?)\(A\)(.*?\(D\))/, '$1(C)$2');
@@ -235,7 +235,11 @@ for (const test of tests) {
           rawLines: []
         };
       } else if (currentQ) {
-        currentQ.rawLines.push(trimmed);
+        const cleaned = cleanLine(trimmed);
+        // Ignore lines that are empty or only contain question marks/spaces
+        if (cleaned && cleaned.replace(/[?\s]/g, '') !== '') {
+          currentQ.rawLines.push(cleaned);
+        }
       }
     }
     if (currentQ) {
