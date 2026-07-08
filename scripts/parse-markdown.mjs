@@ -101,23 +101,26 @@ function parseInlineOptions(str) {
 // Input: array of strings like ["text A", "(B) text B", "(C) text C", "(D) text D"]
 function parseBulletOptions(bulletLines) {
   const opts = { A: '', B: '', C: '', D: '' };
-  let current = 'A';
-
-  for (const line of bulletLines) {
-    const clean = line.replace(/^[-*\s]+/, '').trim();
-    const match = clean.match(/^\(([ABCD])\)\s*(.*)/);
-    if (match) {
-      current = match[1];
-      opts[current] = match[2].trim();
-    } else {
-      // continuation of current option, or first option (A) without marker
-      if (opts[current] === '' && current === 'A') {
-        opts['A'] = clean;
-      } else {
-        opts[current] = (opts[current] + ' ' + clean).trim();
-      }
-    }
+  
+  // Clean all lines and join them to handle inline options
+  const cleanLines = bulletLines.map(l => l.replace(/^[-*\s]+/, '').trim());
+  
+  // Try to parse as single string first
+  const fullStr = cleanLines.join(' ');
+  
+  // If the first option doesn't explicitly start with (A), we assume it's A until (B)
+  // Let's normalize it so we can easily parse it
+  let normalizedStr = fullStr;
+  if (!normalizedStr.startsWith('(A)')) {
+    normalizedStr = '(A) ' + normalizedStr;
   }
+  
+  const re = /\(([ABCD])\)\s*(.*?)(?=\s*\([ABCD]\)|$)/g;
+  let m;
+  while ((m = re.exec(normalizedStr)) !== null) {
+    opts[m[1]] = m[2].trim();
+  }
+  
   return opts;
 }
 
